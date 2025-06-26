@@ -1,0 +1,132 @@
+# nginx proxy address - http://172.17.0.1:60236
+
+name: jitsi
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+x-env: &default-env 
+  - HTTP_PORT=80
+  - HTTPS_PORT=443
+  - TZ=${TZ:-America/New_York}
+  - PUBLIC_URL=http://${BASE_HOST_NAME:-$HOSTNAME}
+  - JICOFO_MAX_MEMORY=3072m
+  - VIDEOBRIDGE_MAX_MEMORY=3072m
+  - ENABLE_JAAS_COMPONENTS=0
+  - ENABLE_LETSENCRYPT=1
+  - LETSENCRYPT_USE_STAGING=1
+  - LETSENCRYPT_ACME_SERVER="letsencrypt"
+  - LETSENCRYPT_DOMAIN=${BASE_HOST_NAME:-$HOSTNAME}
+  - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-ssl-admin@${BASE_HOST_NAME:-$HOSTNAME}}
+  - ETHERPAD_URL_BASE=http://etherpad.meet.jitsi:9001
+  - ETHERPAD_PUBLIC_URL=https://etherpad.my.domain/p/
+  - WHITEBOARD_COLLAB_SERVER_URL_BASE=http://whiteboard.meet.jitsi
+  - WHITEBOARD_COLLAB_SERVER_PUBLIC_URL=https://whiteboard.meet.my.domain
+  - JIGASI_SIP_URI=test@sip2sip.info
+  - JIGASI_SIP_PASSWORD=passw0rd
+  - JIGASI_SIP_SERVER=sip2sip.info
+  - JIGASI_SIP_PORT=5060
+  - JIGASI_SIP_TRANSPORT=UDP
+  - ENABLE_AUTH=1
+  - ENABLE_GUESTS=1
+  - AUTH_TYPE=internal
+  - JWT_APP_ID=my_jitsi_app_id
+  - JWT_APP_SECRET=my_jitsi_app_secret
+  - JWT_ACCEPTED_ISSUERS=my_web_client,my_app_client
+  - JWT_ACCEPTED_AUDIENCES=my_server1,my_server2
+  - JICOFO_AUTH_PASSWORD=
+  - JVB_AUTH_PASSWORD=
+  - JIGASI_XMPP_PASSWORD=
+  - JIGASI_TRANSCRIBER_PASSWORD=
+  - JIBRI_RECORDER_PASSWORD=
+  - JIBRI_XMPP_PASSWORD=
+
+services:
+  web:
+    image: jitsi/web:latest
+    container_name: jitsi-web
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      << : *default-environment
+    ports:
+      - '172.17.0.1:59052:80'
+      - '172.17.0.1:59053:443'
+    volumes:
+      - './rootfs/config/web:/config:Z'
+      - './rootfs/config/cron:/var/spool/cron/crontabs:Z'
+      - './rootfs/config/web/load-test:/usr/share/jitsi-meet/load-test:Z'
+      - './rootfs/data/web/transcripts:/usr/share/jitsi-meet/transcripts:Z'
+    labels:
+      service: 'jitsi-web'
+    depends_on:
+      - jitsi-jvb
+    networks:
+      jitsi:
+
+  prosody:
+    image: jitsi/prosody:latest
+    container_name: jistsi-prosody
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      << : *default-environment
+    expose:
+      - '5222'
+      - '5269'
+      - '5347'
+      - '5280'
+    volumes:
+      - './rootfs/config/prosody:/config:Z'
+      - './rootfs/data/prosody:/prosody-plugins-custom:Z'
+    labels:
+      service: 'jitsi-prosody'
+    networks:
+      jitsi:
+
+  jicofo:
+    image: jitsi/jicofo:latest
+    container_name: jitsi-jicofo
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      << : *default-environment
+    expose:
+      - '8888:8888'
+    volumes:
+      - './rootfs/config/jicofo:/config:Z'
+    depends_on:
+      - prosody
+    labels:
+      service: 'jitsi-jicofo'
+    networks:
+      jitsi:
+
+  jvb:
+    image: jitsi/jvb:latest
+    container_name: jitsi-jvb
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      << : *default-environment
+    expose:
+      - '10000:10000/udp'
+    volumes:
+      - './rootfs/config/jvb:/config:Z'
+    labels:
+      service: 'jitsi-jvb'
+    depends_on:
+      - prosody
+    networks:
+      jitsi:
+
+networks:
+  jitsi:
+    name: jitsi
+    external: false
