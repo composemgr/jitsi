@@ -55,10 +55,10 @@ services:
       - '172.17.0.1:59052:80'
       - '172.17.0.1:59053:443'
     volumes:
-      - './rootfs/config/jitsi:/config:Z'
-      - './rootfs/config/cron:/var/spool/cron/crontabs:Z'
-      - './rootfs/config/jitsi/load-test:/usr/share/jitsi-meet/load-test:Z'
-      - './rootfs/data/jitsi/transcripts:/usr/share/jitsi-meet/transcripts:Z'
+      - './volumes/config/jitsi:/config:Z'
+      - './volumes/config/cron:/var/spool/cron/crontabs:Z'
+      - './volumes/config/jitsi/load-test:/usr/share/jitsi-meet/load-test:Z'
+      - './volumes/data/jitsi/transcripts:/usr/share/jitsi-meet/transcripts:Z'
       service: 'jitsi-web'
     depends_on:
       - jvb
@@ -78,8 +78,8 @@ services:
       - '5347'
       - '5280'
     volumes:
-      - './rootfs/config/prosody:/config:Z'
-      - './rootfs/data/prosody:/prosody-plugins-custom:Z'
+      - './volumes/config/prosody:/config:Z'
+      - './volumes/data/prosody:/prosody-plugins-custom:Z'
       service: jitsi-prosody
     networks:
       - jitsi
@@ -94,7 +94,7 @@ services:
     expose:
       - '8888:8888'
     volumes:
-      - './rootfs/config/jicofo:/config:Z'
+      - './volumes/config/jicofo:/config:Z'
     depends_on:
       - prosody
       service: jitsi-jicofo
@@ -111,7 +111,7 @@ services:
     expose:
       - '10000:10000/udp'
     volumes:
-      - './rootfs/config/jvb:/config:Z'
+      - './volumes/config/jvb:/config:Z'
       service: jitsi-jvb
     depends_on:
       - prosody
