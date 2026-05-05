@@ -41,8 +41,8 @@ BASE_DOMAIN_NAME=
 
 ## 📂 Volumes
 
-- `./rootfs/config/jitsi` - Configuration files
-- `./rootfs/data/jitsi` - Application data
+- `./volumes/config/jitsi` - Configuration files
+- `./volumes/data/jitsi` - Application data
 
 ## 🔐 Security
 
