@@ -52,6 +52,8 @@ services:
     logging: *default-logging
     environment:
       <<: *default-env
+      CONTAINER_NAME: jitsi-web
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
     ports:
       - '172.17.0.1:59052:80'
       - '172.17.0.1:59053:443'
@@ -64,6 +66,24 @@ services:
       - jvb
     networks:
       - jitsi
+      - proxy
+      - cloudflare
+    labels:
+      - 'traefik.enable=true'
+      - 'cloudflare.enable=true'
+      - 'traefik.docker.network=proxy'
+      - 'cloudflare.service=http://jitsi-web:80'
+      - 'cloudflare.hostname=jitsi.${CLOUDFLARE_ZONE_NAME:-}'
+      - 'traefik.http.routers.jitsi-web.entrypoints=http'
+      - 'traefik.http.routers.jitsi-web-secure.tls=true'
+      - 'traefik.http.routers.jitsi-web.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.middlewares.jitsi-web-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.jitsi-web.middlewares=jitsi-web-https-redirect'
+      - 'traefik.http.routers.jitsi-web-secure.entrypoints=https'
+      - 'traefik.http.routers.jitsi-web-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.routers.jitsi-web-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.jitsi-web-secure.service=jitsi-web'
+      - 'traefik.http.services.jitsi-web.loadbalancer.server.port=80'
 
   prosody:
     image: jitsi/prosody:latest
@@ -73,6 +93,7 @@ services:
     logging: *default-logging
     environment:
       <<: *default-env
+      CONTAINER_NAME: jitsi-prosody
     expose:
       - '5222'
       - '5269'
@@ -92,6 +113,7 @@ services:
     logging: *default-logging
     environment:
       <<: *default-env
+      CONTAINER_NAME: jitsi-jicofo
     expose:
       - '8888'
     volumes:
@@ -109,6 +131,7 @@ services:
     logging: *default-logging
     environment:
       <<: *default-env
+      CONTAINER_NAME: jitsi-jvb
     expose:
       - '10000/udp'
     volumes:
@@ -122,3 +145,7 @@ networks:
   jitsi:
     name: jitsi
     external: false
+  proxy:
+    external: true
+  cloudflare:
+    external: true
