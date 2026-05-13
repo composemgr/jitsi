@@ -1,4 +1,4 @@
-# nginx proxy address - http://172.17.0.1:60236
+# nginx proxy address - http://172.17.0.1:59052
 
 name: jitsi
 x-logging: &default-logging
@@ -8,40 +8,40 @@ x-logging: &default-logging
   driver: json-file
 
 x-env: &default-env
-  - TZ=${TZ:-America/New_York}
-  - HTTP_PORT=80
-  - HTTPS_PORT=443
-  - PUBLIC_URL=http://${BASE_HOST_NAME:-$HOSTNAME}
-  - JICOFO_MAX_MEMORY=3072m
-  - VIDEOBRIDGE_MAX_MEMORY=3072m
-  - ENABLE_JAAS_COMPONENTS=0
-  - ENABLE_LETSENCRYPT=1
-  - LETSENCRYPT_USE_STAGING=1
-  - LETSENCRYPT_ACME_SERVER=letsencrypt
-  - LETSENCRYPT_DOMAIN=${BASE_HOST_NAME:-$HOSTNAME}
-  - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-ssl-admin@${BASE_DOMAIN_NAME:-${BASE_HOST_NAME}}}
-  - ETHERPAD_URL_BASE=http://etherpad.meet.jitsi:9001
-  - ETHERPAD_PUBLIC_URL=https://etherpad.${BASE_DOMAIN_NAME:-${BASE_HOST_NAME}}/p/
-  - WHITEBOARD_COLLAB_SERVER_URL_BASE=http://whiteboard.meet.jitsi
-  - WHITEBOARD_COLLAB_SERVER_PUBLIC_URL=https://whiteboard.${BASE_DOMAIN_NAME:-${BASE_HOST_NAME}}
-  - JIGASI_SIP_URI=test@sip2sip.info
-  - JIGASI_SIP_PASSWORD=${APP_SECRET_KEY:-changeme_sip_password}
-  - JIGASI_SIP_SERVER=sip2sip.info
-  - JIGASI_SIP_PORT=5060
-  - JIGASI_SIP_TRANSPORT=UDP
-  - ENABLE_AUTH=1
-  - ENABLE_GUESTS=1
-  - AUTH_TYPE=internal
-  - JWT_APP_ID=${APP_API_TOKEN:-my_jitsi_app_id}
-  - JWT_APP_SECRET=${APP_SECRET_KEY:-my_jitsi_app_secret}
-  - JWT_ACCEPTED_ISSUERS=my_web_client,my_app_client
-  - JWT_ACCEPTED_AUDIENCES=my_server1,my_server2
-  - JICOFO_AUTH_PASSWORD=${APP_SECRET_KEY:-}
-  - JVB_AUTH_PASSWORD=${APP_SECRET_KEY:-}
-  - JIGASI_XMPP_PASSWORD=${APP_SECRET_KEY:-}
-  - JIGASI_TRANSCRIBER_PASSWORD=${APP_SECRET_KEY:-}
-  - JIBRI_RECORDER_PASSWORD=${APP_SECRET_KEY:-}
-  - JIBRI_XMPP_PASSWORD=${APP_SECRET_KEY:-}
+  TZ: ${TZ:-America/New_York}
+  HTTP_PORT: '80'
+  HTTPS_PORT: '443'
+  PUBLIC_URL: http://${BASE_HOST_NAME:-localhost}
+  JICOFO_MAX_MEMORY: 3072m
+  VIDEOBRIDGE_MAX_MEMORY: 3072m
+  ENABLE_JAAS_COMPONENTS: '0'
+  ENABLE_LETSENCRYPT: '1'
+  LETSENCRYPT_USE_STAGING: '1'
+  LETSENCRYPT_ACME_SERVER: letsencrypt
+  LETSENCRYPT_DOMAIN: ${BASE_HOST_NAME:-localhost}
+  LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL:-ssl-admin@example.com}
+  ETHERPAD_URL_BASE: http://etherpad.meet.jitsi:9001
+  ETHERPAD_PUBLIC_URL: https://etherpad.${BASE_DOMAIN_NAME:-example.com}/p/
+  WHITEBOARD_COLLAB_SERVER_URL_BASE: http://whiteboard.meet.jitsi
+  WHITEBOARD_COLLAB_SERVER_PUBLIC_URL: https://whiteboard.${BASE_DOMAIN_NAME:-example.com}
+  JIGASI_SIP_URI: test@sip2sip.info
+  JIGASI_SIP_PASSWORD: ${JIGASI_SIP_PASSWORD:-changeme_sip_password}
+  JIGASI_SIP_SERVER: sip2sip.info
+  JIGASI_SIP_PORT: '5060'
+  JIGASI_SIP_TRANSPORT: UDP
+  ENABLE_AUTH: '1'
+  ENABLE_GUESTS: '1'
+  AUTH_TYPE: internal
+  JWT_APP_ID: ${APP_API_TOKEN:-my_jitsi_app_id}
+  JWT_APP_SECRET: ${APP_SECRET_KEY:-changeme_secret_key_min_32_chars}
+  JWT_ACCEPTED_ISSUERS: my_web_client,my_app_client
+  JWT_ACCEPTED_AUDIENCES: my_server1,my_server2
+  JICOFO_AUTH_PASSWORD: ${JICOFO_AUTH_PASSWORD:-changeme_jicofo_password}
+  JVB_AUTH_PASSWORD: ${JVB_AUTH_PASSWORD:-changeme_jvb_password}
+  JIGASI_XMPP_PASSWORD: ${JIGASI_XMPP_PASSWORD:-changeme_jigasi_xmpp_password}
+  JIGASI_TRANSCRIBER_PASSWORD: ${JIGASI_TRANSCRIBER_PASSWORD:-changeme_transcriber_password}
+  JIBRI_RECORDER_PASSWORD: ${JIBRI_RECORDER_PASSWORD:-changeme_jibri_recorder_password}
+  JIBRI_XMPP_PASSWORD: ${JIBRI_XMPP_PASSWORD:-changeme_jibri_xmpp_password}
 
 services:
   web:
@@ -50,7 +50,8 @@ services:
     restart: always
     pull_policy: always
     logging: *default-logging
-    environment: *default-env
+    environment:
+      <<: *default-env
     ports:
       - '172.17.0.1:59052:80'
       - '172.17.0.1:59053:443'
@@ -59,7 +60,6 @@ services:
       - './volumes/config/cron:/var/spool/cron/crontabs:Z'
       - './volumes/config/jitsi/load-test:/usr/share/jitsi-meet/load-test:Z'
       - './volumes/data/jitsi/transcripts:/usr/share/jitsi-meet/transcripts:Z'
-      service: 'jitsi-web'
     depends_on:
       - jvb
     networks:
@@ -71,7 +71,8 @@ services:
     restart: always
     pull_policy: always
     logging: *default-logging
-    environment: *default-env
+    environment:
+      <<: *default-env
     expose:
       - '5222'
       - '5269'
@@ -80,7 +81,6 @@ services:
     volumes:
       - './volumes/config/prosody:/config:Z'
       - './volumes/data/prosody:/prosody-plugins-custom:Z'
-      service: jitsi-prosody
     networks:
       - jitsi
 
@@ -90,14 +90,14 @@ services:
     restart: always
     pull_policy: always
     logging: *default-logging
-    environment: *default-env
+    environment:
+      <<: *default-env
     expose:
-      - '8888:8888'
+      - '8888'
     volumes:
       - './volumes/config/jicofo:/config:Z'
     depends_on:
       - prosody
-      service: jitsi-jicofo
     networks:
       - jitsi
 
@@ -107,12 +107,12 @@ services:
     restart: always
     pull_policy: always
     logging: *default-logging
-    environment: *default-env
+    environment:
+      <<: *default-env
     expose:
-      - '10000:10000/udp'
+      - '10000/udp'
     volumes:
       - './volumes/config/jvb:/config:Z'
-      service: jitsi-jvb
     depends_on:
       - prosody
     networks:
