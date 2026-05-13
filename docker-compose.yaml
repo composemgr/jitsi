@@ -132,8 +132,10 @@ services:
     environment:
       <<: *default-env
       CONTAINER_NAME: jitsi-jvb
+    ports:
+      - '10000:10000/udp'
     expose:
-      - '10000/udp'
+      - '8080'
     volumes:
       - './volumes/config/jvb:/config:Z'
     depends_on:
